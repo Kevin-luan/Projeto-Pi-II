@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="JogoRudan/JogoRudan.vcxproj" Id="2dda86de-376b-4c65-bc6b-e3fbacef353e" />
+</Solution>
