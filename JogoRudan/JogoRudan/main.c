@@ -7,7 +7,7 @@ int main() {
 	al_init();
     al_init_image_addon();
 
-	ALLEGRO_DISPLAY *tela = al_create_display(900, 600);
+	ALLEGRO_DISPLAY *tela = al_create_display(1100, 900);
 
     if (tela == NULL)
     {
@@ -39,9 +39,11 @@ int main() {
     while (executando) {
         ALLEGRO_EVENT evento;
         al_wait_for_event(fila, &evento);
-        al_clear_to_color(al_map_rgb(0, 0, 0));
+        al_clear_to_color(al_map_rgb(157, 168, 2000));
 
         al_draw_bitmap_region(personagem, 0, 0, 113, 135, 100, 100, 0);
+           
+            
 
         al_flip_display();
 
@@ -53,7 +55,7 @@ int main() {
 
 
     }
-
+        
 
     // 6. Liberar memória
     al_destroy_event_queue(fila);
