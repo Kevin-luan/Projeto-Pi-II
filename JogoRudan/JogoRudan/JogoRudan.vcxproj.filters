@@ -29,6 +29,9 @@
     <Image Include="assets\sprites\spritesRudan\rudanBaixo.png">
       <Filter>assets\sprites</Filter>
     </Image>
+    <Image Include="assets\sprites\spriteTeste\Dash\Dash.png">
+      <Filter>assets\sprites</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

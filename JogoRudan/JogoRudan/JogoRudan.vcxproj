@@ -157,6 +157,7 @@
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\sprites\spritesRudan\rudanBaixo.png" />
+    <Image Include="assets\sprites\spriteTeste\Dash\Dash.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
