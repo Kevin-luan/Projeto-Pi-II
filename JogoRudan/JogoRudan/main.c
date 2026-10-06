@@ -1,109 +1,121 @@
+
 #include <stdio.h>
 #include <stdbool.h>
+#include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
 
-int main() {
 
+int main() {
+ 
+
+    //++++++++++++++ Variaveis do jogo
+
+    const int largura_t = 1040;
+    const int altura_t = 980;
+
+    float pos_x =100;
+    float pos_y = 100;
+
+
+    bool fim = false; 
+    ALLEGRO_EVENT_QUEUE* fila_eventos = NULL;
+
+
+
+    //__________________________
+
+  
+
+    //++++++++++++ Inicializacao do ellegro e display 
+    ALLEGRO_DISPLAY* display = NULL;
     if (!al_init()) {
-        printf("Erro ao inicializar a Allegro.\n");
-        return 1;
+        al_show_native_message_box(NULL, "erro!", "Erro ao inicializar o allegro", NULL);
+     }
+    display = al_create_display(largura_t, altura_t);
+
+    if (!display) {
+        al_show_native_message_box(NULL, "erro!", "Erro ao inicializar o allegro", NULL);
+
     }
+  
+
+    //_____________________________________________
+
+       //++++++++++++++++++++ addons e intalacao
 
     al_install_keyboard();
     al_init_image_addon();
+    //___________________________________
+    ALLEGRO_BITMAP* rudanBaixo = al_load_bitmap("assets/sprites/spritesRudan/rudanBaixo.png");
 
-    ALLEGRO_DISPLAY* tela = al_create_display(900, 600);
 
-    if (tela == NULL) {
-        printf("Erro ao criar a tela.\n");
-        return 1;
-    }
+    //++++++ fila e demais dispositivos 
 
-    ALLEGRO_EVENT_QUEUE* fila = al_create_event_queue();
+    fila_eventos = al_create_event_queue();
+    al_init_primitives_addon();
+    //_________________________
 
-    al_register_event_source(
-        fila,
-        al_get_display_event_source(tela)
-    );
 
-    al_register_event_source(
-        fila,
-        al_get_keyboard_event_source()
-    );
+    // +++++++++++++++++++ registros de sources
 
-    ALLEGRO_BITMAP* personagem = al_load_bitmap("assets/sprites/spritesRudan/rudanCima.png");
+    al_register_event_source(fila_eventos, al_get_keyboard_event_source());
 
-    if (personagem == NULL) {
-        printf("Erro ao carregar personagem.png\n");
-        return 1;
-    }
+    al_register_event_source(fila_eventos, al_get_display_event_source(display));
+    //_______________________
 
-    bool rodando = true;
+    //++++++++++++++++++ loop principal
 
-    // Posição do personagem
-    float x = 100;
-    float y = 100;
+    while (!fim)
+    {
+        ALLEGRO_EVENT ev;
+        al_wait_for_event(fila_eventos, &ev);
 
-    // Velocidade
-    float velocidade = 5;
+                //++++++ eventos e logoca do jogo 
+        if (ev.type == ALLEGRO_EVENT_KEY_DOWN) {
 
-    // Teclas pressionadas
-    bool teclas[ALLEGRO_KEY_MAX] = { false };
+            if (ev.keyboard.keycode == ALLEGRO_KEY_ESCAPE) {
+                fim = true;
+            
+            }
 
-    while (rodando) {
+            switch (ev.keyboard.keycode)
+            {
+            case ALLEGRO_KEY_UP:
+                pos_y -= 10;
+                break;
+            case ALLEGRO_KEY_DOWN:
+                    pos_y += 10;
+                    break;
+            case ALLEGRO_KEY_RIGHT:
+                pos_x += 10;
+                break; 
+            case ALLEGRO_KEY_LEFT:
+                pos_x -= 10;
+                break;
 
-        ALLEGRO_EVENT evento;
-
-        al_wait_for_event(fila, &evento);
-
-        // Fechar janela
-        if (evento.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
-            rodando = false;
+            }
+        }
+        else if(ev.type == ALLEGRO_EVENT_DISPLAY_CLOSE){
+            fim = true;
         }
 
-        // Tecla pressionada
-        if (evento.type == ALLEGRO_EVENT_KEY_DOWN) {
-            teclas[evento.keyboard.keycode] = true;
-        }
-
-        // Tecla solta
-        if (evento.type == ALLEGRO_EVENT_KEY_UP) {
-            teclas[evento.keyboard.keycode] = false;
-        }
-
-        // Movimento
-        if (teclas[ALLEGRO_KEY_W]) {
-            y -= velocidade;
-        }
-
-        if (teclas[ALLEGRO_KEY_S]) {
-            y += velocidade;
-        }
-
-        if (teclas[ALLEGRO_KEY_A]) {
-            x -= velocidade;
-        }
-
-        if (teclas[ALLEGRO_KEY_D]) {
-            x += velocidade;
-        }
-
-        // Limpa a tela
-        al_clear_to_color(al_map_rgb(30, 30, 30));
-
-        // Desenha o personagem
-        al_draw_bitmap(personagem, x, y, 0);
-
-        // Atualiza a tela
+        // Desenho do jogo
+        al_draw_filled_rectangle(pos_x, pos_y, pos_x + 30, pos_y + 30, al_map_rgb(255, 255, 0));
+        al_draw_bitmap(rudanBaixo, pos_x, pos_y, 0);
         al_flip_display();
+
+        al_clear_to_color(al_map_rgb(0,0,0));
     }
 
-    al_destroy_bitmap(personagem);
-    al_destroy_event_queue(fila);
-    al_destroy_display(tela);
 
-    al_shutdown_image_addon();
+
+
+    //+++++++++ finalizacao do programa 
+
+    al_destroy_display(display);
+    al_destroy_event_queue(fila_eventos);
 
     return 0;
 }
+
