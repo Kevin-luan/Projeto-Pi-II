@@ -5,4 +5,5 @@ Debug/
 Release/
 packages/
 *.user
-*.suoallegro.log
+*.suo
+allegro.log
