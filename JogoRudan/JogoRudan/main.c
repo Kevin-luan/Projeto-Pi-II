@@ -21,6 +21,9 @@ int main() {
     bool fogo_ativo = false;
 
     bool fim = false;
+    int FPS = 60;
+    
+    
 
     ALLEGRO_EVENT_QUEUE* fila_eventos = NULL;
 
@@ -29,6 +32,8 @@ int main() {
 
     // Inicialização do Allegro
     ALLEGRO_DISPLAY* display = NULL;
+    ALLEGRO_TIMER* timer = NULL;
+
 
     if (!al_init()) {
         al_show_native_message_box(
@@ -57,6 +62,9 @@ int main() {
     al_install_keyboard();
     al_init_image_addon();
     al_init_primitives_addon();
+    timer = al_create_timer(1.0 / FPS);
+   
+   
 
 
     // Sprites
@@ -73,20 +81,18 @@ int main() {
         al_load_bitmap("assets/sprites/spritesRudan/rudanCima2.png");
 
 
+
+
     // Fila de eventos
     fila_eventos = al_create_event_queue();
 
-    al_register_event_source(
-        fila_eventos,
-        al_get_keyboard_event_source()
-    );
+    al_register_event_source(fila_eventos,al_get_keyboard_event_source());
 
-    al_register_event_source(
-        fila_eventos,
-        al_get_display_event_source(display)
-    );
+    al_register_event_source(fila_eventos,al_get_display_event_source(display));
 
+    al_register_event_source(fila_eventos, al_get_timer_event_source(timer));
 
+    al_start_timer(timer);
     // Loop principal
     while (!fim) {
 
@@ -194,31 +200,33 @@ int main() {
             }
         }
 
-
-        // Limpa a tela
-        al_clear_to_color(al_map_rgb(0, 0, 0));
-
-
-        // Desenha o jogador
-        al_draw_bitmap(
-            rudanBaixo1,
-            pos_x,
-            pos_y,
-            0
-        );
+        
+            // Limpa a tela
+            al_clear_to_color(al_map_rgb(0, 0, 0));
 
 
-        // Desenha o tiro
-        if (fogo_ativo) {
-
-            al_draw_filled_circle(
-                fogo_x,
-                fogo_y,
-                5,
-                al_map_rgb(255, 0, 0)
+            // Desenha o jogador
+            al_draw_bitmap(
+                rudanBaixo1,
+                pos_x,
+                pos_y,
+                0
             );
-        }
 
+
+            // Desenha o tiro
+            if (fogo_ativo) {
+
+                al_draw_filled_circle(fogo_x,fogo_y,5,
+                al_map_rgb(255, 0, 0)
+                );
+            }
+
+
+
+        
+
+     
 
         // Mostra tudo na tela
         al_flip_display();
