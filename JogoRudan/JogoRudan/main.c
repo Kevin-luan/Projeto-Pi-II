@@ -6,7 +6,18 @@
 #include <allegro5/allegro_image.h>
 #include <allegro5/allegro_primitives.h>
 
-enum TECLAS { CIMA, BAIXO, DIREITA, ESQUERDA, FOGO };
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h> 
+
+typedef struct {
+    float x;
+    float y;
+    ALLEGRO_BITMAP* img;
+} barco;
+
+enum TECLAS {
+    CIMA, BAIXO, DIREITA, ESQUERDA, FOGO
+};
 
 enum DIRECAO {
     DIRECAO_BAIXO,
@@ -17,6 +28,8 @@ enum DIRECAO {
 
 int main() {
 
+    barco barco1;
+
     // Configurações
     const int largura_t = 1040;
     const int altura_t = 980;
@@ -24,6 +37,7 @@ int main() {
 
     const float velocidade = 5.0f;
     const float velocidade_tiro = 10.0f;
+    const float velocidadeBarco = 5.0f;
 
     // Posição do jogador
     float pos_x = 100.0f;
@@ -50,9 +64,8 @@ int main() {
 
     // Barco
     int barco_direcao = 0;
-    float barco_x = 500.0f;
-    float barco_y = 300.0f;
     bool barcoVivo = true;
+    int vidaBarco = 0;
 
     // Controle
     bool fim = false;
@@ -86,6 +99,8 @@ int main() {
     }
 
     al_init_primitives_addon();
+    al_init_font_addon();
+    al_init_ttf_addon(); 
 
     // Timer
     timer = al_create_timer(1.0 / FPS);
@@ -96,31 +111,50 @@ int main() {
     }
 
     // Sprites do personagem
-    ALLEGRO_BITMAP* rudanBaixo1 = al_load_bitmap("assets/sprites/spritesRudan/rudanBaixo1.png");
-    ALLEGRO_BITMAP* rudanBaixo2 = al_load_bitmap("assets/sprites/spritesRudan/rudanBaixo2.png");
+    ALLEGRO_BITMAP* rudanBaixo1 =
+        al_load_bitmap("assets/sprites/spritesRudan/rudanBaixo1.png");
+    ALLEGRO_BITMAP* rudanBaixo2 =
+        al_load_bitmap("assets/sprites/spritesRudan/rudanBaixo2.png");
 
-    ALLEGRO_BITMAP* rudanCima1 = al_load_bitmap("assets/sprites/spritesRudan/rudanCima1.png");
-    ALLEGRO_BITMAP* rudanCima2 = al_load_bitmap("assets/sprites/spritesRudan/rudanCima2.png");
+    ALLEGRO_BITMAP* rudanCima1 =
+        al_load_bitmap("assets/sprites/spritesRudan/rudanCima1.png");
+    ALLEGRO_BITMAP* rudanCima2 =
+        al_load_bitmap("assets/sprites/spritesRudan/rudanCima2.png");
 
-    ALLEGRO_BITMAP* rudanDireita1 = al_load_bitmap("assets/sprites/spritesRudan/rudanDireita1.png");
-    ALLEGRO_BITMAP* rudanDireita2 = al_load_bitmap("assets/sprites/spritesRudan/rudanDireita2.png");
+    ALLEGRO_BITMAP* rudanDireita1 =
+        al_load_bitmap("assets/sprites/spritesRudan/rudanDireita1.png");
+    ALLEGRO_BITMAP* rudanDireita2 =
+        al_load_bitmap("assets/sprites/spritesRudan/rudanDireita2.png");
 
-    ALLEGRO_BITMAP* rudanEsquerda1 = al_load_bitmap("assets/sprites/spritesRudan/rudanEsquerda1.png");
-    ALLEGRO_BITMAP* rudanEsquerda2 = al_load_bitmap("assets/sprites/spritesRudan/rudanEsquerda2.png");
+    ALLEGRO_BITMAP* rudanEsquerda1 =
+        al_load_bitmap("assets/sprites/spritesRudan/rudanEsquerda1.png");
+    ALLEGRO_BITMAP* rudanEsquerda2 =
+        al_load_bitmap("assets/sprites/spritesRudan/rudanEsquerda2.png");
 
-    ALLEGRO_BITMAP* mapa1 = al_load_bitmap("assets/sprites/spritesRudan/telaMar.png");
+    ALLEGRO_BITMAP* mapa1 =
+        al_load_bitmap("assets/sprites/spritesRudan/telaMar.png");
 
     // Sprites do barco
-    ALLEGRO_BITMAP* barcoDireita = al_load_bitmap("assets/sprites/spritesRudan/barcoDireita.png");
-    ALLEGRO_BITMAP* barcoEsquerda = al_load_bitmap("assets/sprites/spritesRudan/barcoEsquerda.png");
+    ALLEGRO_BITMAP* barcoDireita =
+        al_load_bitmap("assets/sprites/spritesRudan/barcoDireita.png");
+    ALLEGRO_BITMAP* barcoEsquerda =
+        al_load_bitmap("assets/sprites/spritesRudan/barcoEsquerda.png");
+
+    ALLEGRO_FONT* fonte = al_create_builtin_font();
+    barco1.x = 500.0f;
+    barco1.y = 300.0f;
+    barco1.img = barcoDireita;
 
     // Verifica se os sprites foram carregados
-    if (!rudanBaixo1 || !rudanBaixo2 || !rudanCima1 || !rudanCima2 ||
-        !rudanDireita1 || !rudanDireita2 || !rudanEsquerda1 || !rudanEsquerda2 ||
+    if (!rudanBaixo1 || !rudanBaixo2 ||
+        !rudanCima1 || !rudanCima2 ||
+        !rudanDireita1 || !rudanDireita2 ||
+        !rudanEsquerda1 || !rudanEsquerda2 ||
         !mapa1 || !barcoDireita || !barcoEsquerda) {
 
-        al_show_native_message_box(display, "Erro!", "Erro ao carregar os sprites.", NULL, 0);
+     
 
+        // Libera os sprites que foram carregados
         if (rudanBaixo1) al_destroy_bitmap(rudanBaixo1);
         if (rudanBaixo2) al_destroy_bitmap(rudanBaixo2);
         if (rudanCima1) al_destroy_bitmap(rudanCima1);
@@ -138,9 +172,13 @@ int main() {
         return 1;
     }
 
+    // Tamanho do personagem
+    int largura_personagem = al_get_bitmap_width(rudanBaixo1);
+    int altura_personagem = al_get_bitmap_height(rudanBaixo1);
+
     // Tamanho do barco
-    int barco_largura = al_get_bitmap_width(barcoDireita);
-    int barco_altura = al_get_bitmap_height(barcoDireita);
+    int barco_largura = al_get_bitmap_width(barcoDireita) * 5;
+    int barco_altura = al_get_bitmap_height(barcoDireita) * 5;
 
     // Tamanho do tiro
     const float fogo_raio = 5.0f;
@@ -165,10 +203,16 @@ int main() {
         return 1;
     }
 
-    // Eventos
-    al_register_event_source(fila_eventos, al_get_keyboard_event_source());
-    al_register_event_source(fila_eventos, al_get_display_event_source(display));
-    al_register_event_source(fila_eventos, al_get_timer_event_source(timer));
+    // Registra eventos
+    al_register_event_source(
+        fila_eventos, al_get_keyboard_event_source()
+    );
+    al_register_event_source(
+        fila_eventos, al_get_display_event_source(display)
+    );
+    al_register_event_source(
+        fila_eventos, al_get_timer_event_source(timer)
+    );
 
     al_start_timer(timer);
 
@@ -208,6 +252,7 @@ int main() {
                 break;
 
             case ALLEGRO_KEY_D:
+
                 teclas[FOGO] = true;
 
                 if (!fogo_ativo) {
@@ -284,19 +329,20 @@ int main() {
             if (teclas[ESQUERDA]) pos_x -= velocidade;
             if (teclas[DIREITA]) pos_x += velocidade;
 
-            // Tamanho do personagem
-            int largura_personagem = al_get_bitmap_width(rudanBaixo1);
-            int altura_personagem = al_get_bitmap_height(rudanBaixo1);
-
             // Limita o personagem à tela
             if (pos_x < 0) pos_x = 0;
             if (pos_y < 0) pos_y = 0;
 
-            if (pos_x + largura_personagem > largura_t) pos_x = largura_t - largura_personagem;
-            if (pos_y + altura_personagem > altura_t) pos_y = altura_t - altura_personagem;
+            if (pos_x + largura_personagem > largura_t)
+                pos_x = largura_t - largura_personagem;
+
+            if (pos_y + altura_personagem > altura_t)
+                pos_y = altura_t - altura_personagem;
 
             // Verifica se está andando
-            bool andando = teclas[CIMA] || teclas[BAIXO] || teclas[DIREITA] || teclas[ESQUERDA];
+            bool andando =
+                teclas[CIMA] || teclas[BAIXO] ||
+                teclas[DIREITA] || teclas[ESQUERDA];
 
             // Animação
             if (andando) {
@@ -306,7 +352,8 @@ int main() {
                     contador_animacao = 0;
                     frame_atual++;
 
-                    if (frame_atual >= 2) frame_atual = 0;
+                    if (frame_atual >= 2)
+                        frame_atual = 0;
                 }
             }
             else {
@@ -320,8 +367,12 @@ int main() {
                 fogo_x += fogo_dx;
                 fogo_y += fogo_dy;
 
-                if (fogo_x + fogo_raio < 0 || fogo_x - fogo_raio > largura_t ||
-                    fogo_y + fogo_raio < 0 || fogo_y - fogo_raio > altura_t) {
+                // Desativa o tiro quando sai da tela
+                if (fogo_x + fogo_raio < 0 ||
+                    fogo_x - fogo_raio > largura_t ||
+                    fogo_y + fogo_raio < 0 ||
+                    fogo_y - fogo_raio > altura_t) {
+
                     fogo_ativo = false;
                 }
             }
@@ -329,12 +380,18 @@ int main() {
             // Colisão do tiro com o barco
             if (barcoVivo && fogo_ativo) {
 
-                if (fogo_x + fogo_raio >= barco_x &&
-                    fogo_x - fogo_raio <= barco_x + barco_largura &&
-                    fogo_y + fogo_raio >= barco_y &&
-                    fogo_y - fogo_raio <= barco_y + barco_altura) {
+                if (fogo_x + fogo_raio >= barco1.x &&
+                    fogo_x - fogo_raio <= barco1.x + barco_largura &&
+                    fogo_y + fogo_raio >= barco1.y &&
+                    fogo_y - fogo_raio <= barco1.y + barco_altura) {
 
-                    barcoVivo = false;
+                    vidaBarco++;
+                    if (vidaBarco ==5) {
+                        barcoVivo = false;
+                    }
+
+                  
+
                     fogo_ativo = false;
                 }
             }
@@ -342,20 +399,24 @@ int main() {
             // Desenha o mapa
             al_draw_bitmap(mapa1, 0, 0, 0);
 
-            // Sprite atual
+            // Seleciona o sprite atual
             ALLEGRO_BITMAP* sprite_atual = NULL;
 
             if (direcao_atual == DIRECAO_BAIXO) {
-                sprite_atual = (frame_atual == 0) ? rudanBaixo1 : rudanBaixo2;
+                sprite_atual =
+                    (frame_atual == 0) ? rudanBaixo1 : rudanBaixo2;
             }
             else if (direcao_atual == DIRECAO_CIMA) {
-                sprite_atual = (frame_atual == 0) ? rudanCima1 : rudanCima2;
+                sprite_atual =
+                    (frame_atual == 0) ? rudanCima1 : rudanCima2;
             }
             else if (direcao_atual == DIRECAO_DIREITA) {
-                sprite_atual = (frame_atual == 0) ? rudanDireita1 : rudanDireita2;
+                sprite_atual =
+                    (frame_atual == 0) ? rudanDireita1 : rudanDireita2;
             }
             else if (direcao_atual == DIRECAO_ESQUERDA) {
-                sprite_atual = (frame_atual == 0) ? rudanEsquerda1 : rudanEsquerda2;
+                sprite_atual =
+                    (frame_atual == 0) ? rudanEsquerda1 : rudanEsquerda2;
             }
 
             // Desenha o personagem
@@ -364,43 +425,54 @@ int main() {
             }
 
             // Movimento e desenho do barco
+            // Este bloco só executa se o barco estiver vivo
             if (barcoVivo) {
 
                 switch (barco_direcao) {
 
                 case 0:
-                    al_draw_bitmap(barcoDireita, barco_x, barco_y, 0);
-                    barco_x += 1.0f;
+                    barco1.x += velocidadeBarco;
 
-                    if (barco_x >= largura_t - barco_largura) {
-                        barco_x = largura_t - barco_largura;
+                    if (barco1.x >= largura_t - barco_largura) {
+                        barco1.x = largura_t - barco_largura;
                         barco_direcao = 1;
+                        barco1.img = barcoEsquerda;
                     }
                     break;
 
                 case 1:
-                    al_draw_bitmap(barcoEsquerda, barco_x, barco_y, 0);
-                    barco_x -= 1.0f;
+                    barco1.x -= velocidadeBarco;
 
-                    if (barco_x <= 0) {
-                        barco_x = 0;
+                    if (barco1.x <= 0) {
+                        barco1.x = 0;
                         barco_direcao = 0;
+                        barco1.img = barcoDireita;
                     }
                     break;
                 }
+
+                // Desenha o barco apenas se estiver vivo
+                al_draw_scaled_bitmap(barco1.img,0, 0,al_get_bitmap_width(barco1.img),al_get_bitmap_height(barco1.img),barco1.x, barco1.y,barco_largura, barco_altura,0);
             }
 
             // Desenha o tiro
             if (fogo_ativo) {
-                al_draw_filled_circle(fogo_x, fogo_y, fogo_raio, al_map_rgb(255, 0, 0));
+                al_draw_filled_circle(
+                    fogo_x,
+                    fogo_y,
+                    fogo_raio,
+                    al_map_rgb(255, 0, 0)
+                );
             }
+            al_draw_textf(fonte, al_map_rgb(255, 255, 255), 100, 100, 0, "Vida do barco %d", 5  - vidaBarco);
+
 
             // Atualiza a tela
             al_flip_display();
         }
     }
 
-    // Finalização
+    // Finalização: libera os recursos
     al_destroy_bitmap(rudanBaixo1);
     al_destroy_bitmap(rudanBaixo2);
     al_destroy_bitmap(rudanCima1);
