@@ -471,8 +471,8 @@ void fase1(void) {
                     fogo_raio,
                     al_map_rgb(255, 0, 0)
                 );
-            }
             al_draw_textf(fonte, al_map_rgb(255, 255, 255), 100, 100, 0, "VIDA DO BARCO %d", 5 - vidaBarco);
+            }
 
 
             // Atualiza a tela
