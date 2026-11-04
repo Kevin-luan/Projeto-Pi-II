@@ -6,7 +6,7 @@ int main(void)
     if (!al_init())
         return -1;
 
-    fase2();
+    menu();
 
     return 0;
 }

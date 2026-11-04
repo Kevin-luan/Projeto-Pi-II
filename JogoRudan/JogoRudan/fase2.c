@@ -377,7 +377,7 @@ void fase2(void)
                 teclas[BAIXO] = false;
 
                 break;
-
+                
             case ALLEGRO_KEY_RIGHT:
 
                 teclas[DIREITA] = false;
