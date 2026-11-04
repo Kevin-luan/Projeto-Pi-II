@@ -7,7 +7,7 @@
 #include <allegro5/allegro_primitives.h>
 
 #include <allegro5/allegro_font.h>
-#include <allegro5/allegro_ttf.h> 
+#include <allegro5/allegro_ttf.h>
 
 #include "fase.h"
 
@@ -33,8 +33,8 @@ void fase1(void) {
     barco barco1;
 
     // Configurações
-    const int largura_t = 1040;
-    const int altura_t = 980;
+    const int largura_t = 1920;
+    const int altura_t = 1200;
     const int FPS = 60;
 
     const float velocidade = 5.0f;
@@ -79,38 +79,36 @@ void fase1(void) {
 
     // Inicialização
     if (!al_init()) {
-        return 1;
+        return;
     }
 
     // Teclado
     if (!al_install_keyboard()) {
-        return 1;
+        return;
     }
 
     // Display
     display = al_create_display(largura_t, altura_t);
 
     if (!display) {
-        return 1;
+        return;
     }
 
     // Addons
     if (!al_init_image_addon()) {
         al_destroy_display(display);
-        return 1;
+        return;
     }
 
     al_init_primitives_addon();
     al_init_font_addon();
-
-
 
     // Timer
     timer = al_create_timer(1.0 / FPS);
 
     if (!timer) {
         al_destroy_display(display);
-        return 1;
+        return;
     }
 
     // Sprites do personagem
@@ -145,8 +143,6 @@ void fase1(void) {
 
     ALLEGRO_FONT* fonte = al_create_builtin_font();
 
-
-
     barco1.x = 500.0f;
     barco1.y = 100.0f;
     barco1.img = barcoDireita;
@@ -158,9 +154,6 @@ void fase1(void) {
         !rudanEsquerda1 || !rudanEsquerda2 ||
         !mapa1 || !barcoDireita || !barcoEsquerda) {
 
-
-
-        // Libera os sprites que foram carregados
         if (rudanBaixo1) al_destroy_bitmap(rudanBaixo1);
         if (rudanBaixo2) al_destroy_bitmap(rudanBaixo2);
         if (rudanCima1) al_destroy_bitmap(rudanCima1);
@@ -173,9 +166,11 @@ void fase1(void) {
         if (barcoDireita) al_destroy_bitmap(barcoDireita);
         if (barcoEsquerda) al_destroy_bitmap(barcoEsquerda);
 
+        if (fonte) al_destroy_font(fonte);
+
         al_destroy_timer(timer);
         al_destroy_display(display);
-        return 1;
+        return;
     }
 
     // Tamanho do personagem
@@ -204,18 +199,23 @@ void fase1(void) {
         al_destroy_bitmap(mapa1);
         al_destroy_bitmap(barcoDireita);
         al_destroy_bitmap(barcoEsquerda);
+
+        if (fonte) al_destroy_font(fonte);
+
         al_destroy_timer(timer);
         al_destroy_display(display);
-        return 1;
+        return;
     }
 
     // Registra eventos
     al_register_event_source(
         fila_eventos, al_get_keyboard_event_source()
     );
+
     al_register_event_source(
         fila_eventos, al_get_display_event_source(display)
     );
+
     al_register_event_source(
         fila_eventos, al_get_timer_event_source(timer)
     );
@@ -373,7 +373,6 @@ void fase1(void) {
                 fogo_x += fogo_dx;
                 fogo_y += fogo_dy;
 
-                // Desativa o tiro quando sai da tela
                 if (fogo_x + fogo_raio < 0 ||
                     fogo_x - fogo_raio > largura_t ||
                     fogo_y + fogo_raio < 0 ||
@@ -392,20 +391,27 @@ void fase1(void) {
                     fogo_y - fogo_raio <= barco1.y + barco_altura) {
 
                     vidaBarco++;
+
                     if (vidaBarco == 5) {
                         barcoVivo = false;
                         fim = true;
                     }
 
-
-
-
                     fogo_ativo = false;
                 }
             }
 
-            // Desenha o mapa
-            al_draw_bitmap(mapa1, 0, 0, 0);
+            // Desenha o mapa ocupando toda a janela
+            al_draw_scaled_bitmap(
+                mapa1,
+                0, 0,
+                al_get_bitmap_width(mapa1),
+                al_get_bitmap_height(mapa1),
+                0, 0,
+                largura_t,
+                altura_t,
+                0
+            );
 
             // Seleciona o sprite atual
             ALLEGRO_BITMAP* sprite_atual = NULL;
@@ -433,7 +439,6 @@ void fase1(void) {
             }
 
             // Movimento e desenho do barco
-            // Este bloco só executa se o barco estiver vivo
             if (barcoVivo) {
 
                 switch (barco_direcao) {
@@ -459,8 +464,15 @@ void fase1(void) {
                     break;
                 }
 
-                // Desenha o barco apenas se estiver vivo
-                al_draw_scaled_bitmap(barco1.img, 0, 0, al_get_bitmap_width(barco1.img), al_get_bitmap_height(barco1.img), barco1.x, barco1.y, barco_largura, barco_altura, 0);
+                al_draw_scaled_bitmap(
+                    barco1.img,
+                    0, 0,
+                    al_get_bitmap_width(barco1.img),
+                    al_get_bitmap_height(barco1.img),
+                    barco1.x, barco1.y,
+                    barco_largura, barco_altura,
+                    0
+                );
             }
 
             // Desenha o tiro
@@ -471,16 +483,23 @@ void fase1(void) {
                     fogo_raio,
                     al_map_rgb(255, 0, 0)
                 );
-            al_draw_textf(fonte, al_map_rgb(255, 255, 255), 100, 100, 0, "VIDA DO BARCO %d", 5 - vidaBarco);
             }
 
+            al_draw_textf(
+                fonte,
+                al_map_rgb(255, 255, 255),
+                100, 100,
+                0,
+                "VIDA DO BARCO %d",
+                5 - vidaBarco
+            );
 
             // Atualiza a tela
             al_flip_display();
         }
     }
 
-    // Finalização: libera os recursos
+    // Finalização
     al_destroy_bitmap(rudanBaixo1);
     al_destroy_bitmap(rudanBaixo2);
     al_destroy_bitmap(rudanCima1);
@@ -493,11 +512,11 @@ void fase1(void) {
     al_destroy_bitmap(barcoDireita);
     al_destroy_bitmap(barcoEsquerda);
 
+    if (fonte) al_destroy_font(fonte);
+
     al_destroy_timer(timer);
     al_destroy_event_queue(fila_eventos);
     al_destroy_display(display);
 
     fase2();
-
- 
 }

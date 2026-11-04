@@ -156,6 +156,7 @@
     <ClCompile Include="fase1.c" />
     <ClCompile Include="fase2.c" />
     <ClCompile Include="main.c" />
+    <ClCompile Include="menu.c" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\sprites\spritesRudan\rudanBaixo.png" />

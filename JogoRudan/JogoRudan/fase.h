@@ -3,5 +3,6 @@
 
 void fase1(void);
 void fase2(void);
+void menu(void);
 
 #endif
