@@ -1,6 +1,7 @@
-
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <time.h>
 #include <math.h>
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
@@ -16,38 +17,215 @@ float pos_y = 800.0f;
 
 // ini migo 
 
-float ini_x = 200.0f;
-float ini_y = 200.0f;
-void atualizarInimigo( )
+#define FOOTMAN_FRAMES 8     // frames de cada sprite sheet (lado a lado)
+#define INI_ESCALA 0.2f      // tamanho na tela (o frame original tem 288x312)
+#define INI_VEL_ANIM 8       // quanto maior, mais lenta a animacao
+
+#define MAX_INIMIGOS 30      // maximo de inimigos ao mesmo tempo
+
+#define INI_PASTA "assets/sprites/spritesRudan/royal_legion_lite_free_footman/animations/kng_footman/"
+
+enum DIR_INIMIGO { INI_BAIXO, INI_CIMA, INI_DIREITA, INI_ESQUERDA };
+
+// Mesma ordem do enum acima
+static const char* ini_arquivos[4] = {
+    INI_PASTA "down/kng_footman_down_idle_sheet.png",
+    INI_PASTA "up/kng_footman_up_idle_sheet.png",
+    INI_PASTA "right/kng_footman_right_idle_sheet.png",
+    INI_PASTA "left/kng_footman_left_idle_sheet.png"
+};
+
+typedef struct {
+    float x;
+    float y;
+    float vel;
+    bool vivo;
+    int dir;
+    int frame;
+    int contador;
+} inimigo;
+
+inimigo inimigos[MAX_INIMIGOS];
+
+int total_inimigos = 0;   // quantos inimigos tem na onda atual
+int onda_atual = 0;       // numero da onda atual
+
+ALLEGRO_BITMAP* ini_sheet[4] = { NULL, NULL, NULL, NULL };
+
+// Tamanho da caixa de colisao do inimigo (ajuste se precisar)
+#define INI_HIT_LARG 36.0f
+#define INI_HIT_ALT 52.0f
+
+// Retorna o indice do primeiro inimigo vivo que encosta no
+// retangulo (x, y, w, h), ou -1 se nenhum encostar
+int colideComInimigo(float x, float y, float w, float h)
+{
+    for (int i = 0; i < total_inimigos; i++) {
+
+        if (!inimigos[i].vivo) continue;
+
+        if (x < inimigos[i].x + INI_HIT_LARG / 2.0f &&
+            x + w > inimigos[i].x - INI_HIT_LARG / 2.0f &&
+            y < inimigos[i].y + INI_HIT_ALT / 2.0f &&
+            y + h > inimigos[i].y - INI_HIT_ALT / 2.0f) {
+
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+// Retorna true se todos os inimigos da onda atual morreram
+bool todosInimigosMortos(void)
+{
+    for (int i = 0; i < total_inimigos; i++) {
+        if (inimigos[i].vivo) return false;
+    }
+
+    return true;
+}
+
+// Cria uma nova onda com "quantidade" inimigos em lugares aleatorios,
+// sem nascer muito perto do jogador
+void gerarOnda(int quantidade, int largura_t, int altura_t,
+    float alvo_x, float alvo_y)
+{
+    if (quantidade > MAX_INIMIGOS) quantidade = MAX_INIMIGOS;
+
+    total_inimigos = quantidade;
+
+    for (int i = 0; i < quantidade; i++) {
+
+        float x, y, dx, dy;
+        int tentativas = 0;
+
+        do {
+            x = 30.0f + (float)(rand() % (largura_t - 60));
+            y = 30.0f + (float)(rand() % (altura_t - 60));
+
+            dx = x - alvo_x;
+            dy = y - alvo_y;
+
+            tentativas++;
+
+        } while (sqrtf(dx * dx + dy * dy) < 250.0f && tentativas < 50);
+
+        inimigos[i].x = x;
+        inimigos[i].y = y;
+        inimigos[i].vel = 1.5f + (rand() % 11) / 10.0f;   // entre 1.5 e 2.5
+        inimigos[i].vivo = true;
+        inimigos[i].dir = INI_BAIXO;
+        inimigos[i].frame = rand() % FOOTMAN_FRAMES;
+        inimigos[i].contador = 0;
+    }
+}
+
+void liberarInimigo(void)
+{
+    for (int i = 0; i < 4; i++) {
+        if (ini_sheet[i]) {
+            al_destroy_bitmap(ini_sheet[i]);
+            ini_sheet[i] = NULL;
+        }
+    }
+}
+
+bool carregarInimigo(void)
+{
+    srand((unsigned int)time(NULL));
+
+    onda_atual = 0;
+    total_inimigos = 0;
+
+    for (int i = 0; i < MAX_INIMIGOS; i++) {
+        inimigos[i].vivo = false;
+    }
+
+    for (int i = 0; i < 4; i++) {
+        ini_sheet[i] = al_load_bitmap(ini_arquivos[i]);
+    }
+
+    // Se nao existir a pasta "up", usa o sprite de baixo
+    if (!ini_sheet[INI_CIMA] && ini_sheet[INI_BAIXO]) {
+        ini_sheet[INI_CIMA] = al_clone_bitmap(ini_sheet[INI_BAIXO]);
+    }
+
+    for (int i = 0; i < 4; i++) {
+        if (!ini_sheet[i]) {
+            printf("Erro ao carregar: %s\n", ini_arquivos[i]);
+            liberarInimigo();
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void atualizarInimigo(float alvo_x, float alvo_y)
 
 {
 
-    float dx = pos_x - ini_x;
-    float dy = pos_y - ini_y;
-    float distancia = sqrtf(dx * dx + dy * dy);
-    // O inimigo persegue o jogador
-    if (distancia > 30.0f)
-    {
-        float velocidade_inimigo = 2.0f;
-        ini_x += (dx / distancia) * velocidade_inimigo;
-        ini_y += (dy / distancia) * velocidade_inimigo;
+    for (int i = 0; i < total_inimigos; i++) {
+
+        if (!inimigos[i].vivo) continue;
+
+        float dx = alvo_x - inimigos[i].x;
+        float dy = alvo_y - inimigos[i].y;
+        float distancia = sqrtf(dx * dx + dy * dy);
+        // Os inimigos perseguem o jogador
+        if (distancia > 5.0f)
+        {
+            inimigos[i].x += (dx / distancia) * inimigos[i].vel;
+            inimigos[i].y += (dy / distancia) * inimigos[i].vel;
+
+            // Vira para a direcao em que esta andando
+            if (fabsf(dx) > fabsf(dy))
+                inimigos[i].dir = (dx > 0) ? INI_DIREITA : INI_ESQUERDA;
+            else
+                inimigos[i].dir = (dy > 0) ? INI_BAIXO : INI_CIMA;
+
+        }
+
+        // Animacao dos frames
+        inimigos[i].contador++;
+
+        if (inimigos[i].contador >= INI_VEL_ANIM) {
+            inimigos[i].contador = 0;
+            inimigos[i].frame = (inimigos[i].frame + 1) % FOOTMAN_FRAMES;
+        }
 
     }
-   
 
 }
 
-// Desenha o inimigo
+// Desenha os inimigos
 
 void desenharInimigo()
 {
 
-    al_draw_filled_circle(ini_x,ini_y,15,al_map_rgb(200, 200, 200));
-    if (ini_x == pos_x &&  ini_y == pos_y) {
-        al_draw_filled_circle(ini_x+100, ini_y, 15, al_map_rgb(200, 0, 0));
-}
+    for (int i = 0; i < total_inimigos; i++) {
 
+        if (!inimigos[i].vivo) continue;
 
+        ALLEGRO_BITMAP* sheet = ini_sheet[inimigos[i].dir];
+
+        if (!sheet) continue;
+
+        float fw = (float)al_get_bitmap_width(sheet) / FOOTMAN_FRAMES;
+        float fh = (float)al_get_bitmap_height(sheet);
+
+        float dw = fw * INI_ESCALA;
+        float dh = fh * INI_ESCALA;
+
+        al_draw_scaled_bitmap(
+            sheet,
+            inimigos[i].frame * fw, 0, fw, fh,
+            inimigos[i].x - dw / 2.0f, inimigos[i].y - dh / 2.0f, dw, dh,
+            0
+        );
+
+    }
 
 }
 
@@ -229,6 +407,36 @@ void fase2(void)
 
     int altura_personagem = al_get_bitmap_height(rudanBaixo1);
 
+    // Carrega os sprites do inimigo
+
+    if (!carregarInimigo()) {
+
+        al_destroy_bitmap(rudanBaixo1);
+
+        al_destroy_bitmap(rudanBaixo2);
+
+        al_destroy_bitmap(rudanCima1);
+
+        al_destroy_bitmap(rudanCima2);
+
+        al_destroy_bitmap(rudanDireita1);
+
+        al_destroy_bitmap(rudanDireita2);
+
+        al_destroy_bitmap(rudanEsquerda1);
+
+        al_destroy_bitmap(rudanEsquerda2);
+
+        al_destroy_event_queue(fila_eventos);
+
+        al_destroy_timer(timer);
+
+        al_destroy_display(display);
+
+        return;
+
+    }
+
     // Registra os eventos
 
     al_register_event_source(
@@ -377,7 +585,7 @@ void fase2(void)
                 teclas[BAIXO] = false;
 
                 break;
-                
+
             case ALLEGRO_KEY_RIGHT:
 
                 teclas[DIREITA] = false;
@@ -488,11 +696,51 @@ void fase2(void)
 
             }
 
-            // Atualiza a posicao do inimigo a cada timer
+            // Atualiza a posicao dos inimigos a cada timer
 
-            atualizarInimigo();
+            atualizarInimigo(pos_x + largura_personagem / 2.0f,
+                pos_y + altura_personagem / 2.0f);
 
-        
+            // Colisao do tiro com os inimigos
+
+            if (fogo_ativo) {
+
+                int atingido = colideComInimigo(
+                    fogo_x - fogo_raio, fogo_y - fogo_raio,
+                    fogo_raio * 2, fogo_raio * 2);
+
+                if (atingido >= 0) {
+
+                    inimigos[atingido].vivo = false;
+
+                    fogo_ativo = false;
+
+                }
+
+            }
+
+            // Colisao dos inimigos com o personagem
+
+            if (colideComInimigo(pos_x, pos_y,
+                largura_personagem, altura_personagem) >= 0) {
+
+                fim = true;
+
+            }
+
+            // Quando todos morrem, vem a proxima onda (1, 2, 3, ...)
+
+            if (todosInimigosMortos()) {
+
+                onda_atual++;
+
+                gerarOnda(onda_atual, largura_t, altura_t,
+                    pos_x + largura_personagem / 2.0f,
+                    pos_y + altura_personagem / 2.0f);
+
+            }
+
+
 
             al_clear_to_color(al_map_rgb(20, 50, 70));
 
@@ -538,7 +786,7 @@ void fase2(void)
 
             }
 
-            // Desenha o inimigo na posicao atualizada
+            // Desenha os inimigos na posicao atualizada
 
             desenharInimigo();
 
@@ -568,6 +816,8 @@ void fase2(void)
 
     al_destroy_bitmap(rudanEsquerda2);
 
+    liberarInimigo();
+
     al_destroy_event_queue(fila_eventos);
 
     al_destroy_timer(timer);
@@ -575,4 +825,3 @@ void fase2(void)
     al_destroy_display(display);
 
 }
-

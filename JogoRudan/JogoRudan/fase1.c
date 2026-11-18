@@ -1,6 +1,6 @@
-
 #include <stdio.h>
 #include <stdbool.h>
+#include <math.h>
 
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
@@ -45,13 +45,30 @@ void fase1(void) {
     float pos_x = 500.0f;
     float pos_y = 800.0f;
 
-    // Tiro
+    // Tiro do jogador
     float fogo_x = 0.0f;
     float fogo_y = 0.0f;
     float fogo_dx = 0.0f;
     float fogo_dy = 0.0f;
 
     bool fogo_ativo = false;
+
+    // Vidas do jogador
+    int vidaJogador = 3;
+    bool jogadorVivo = true;
+    int invencivel = 0;                    // frames de invencibilidade após levar tiro
+    const int frames_invencivel = 90;      // 1,5 s a 60 FPS
+
+    // Bola preta do barco
+    float bola_x = 0.0f;
+    float bola_y = 0.0f;
+    float bola_dx = 0.0f;
+    float bola_dy = 0.0f;
+    bool bola_ativa = false;
+    const float bola_raio = 8.0f;
+    const float velocidade_bola = 6.0f;
+    int contador_tiro_barco = 0;
+    const int intervalo_tiro_barco = 120;  // atira a cada 2 s
 
     // Teclas
     bool teclas[] = { false, false, false, false, false };
@@ -367,7 +384,7 @@ void fase1(void) {
                 contador_animacao = 0;
             }
 
-            // Movimento do tiro
+            // Movimento do tiro do jogador
             if (fogo_ativo) {
 
                 fogo_x += fogo_dx;
@@ -398,6 +415,41 @@ void fase1(void) {
                     }
 
                     fogo_ativo = false;
+                }
+            }
+
+            // Invencibilidade temporária do jogador
+            if (invencivel > 0) invencivel--;
+
+            // Movimento da bola preta do barco
+            if (bola_ativa) {
+
+                bola_x += bola_dx;
+                bola_y += bola_dy;
+
+                if (bola_x + bola_raio < 0 ||
+                    bola_x - bola_raio > largura_t ||
+                    bola_y + bola_raio < 0 ||
+                    bola_y - bola_raio > altura_t) {
+
+                    bola_ativa = false;
+                }
+            }
+
+            // Colisão da bola preta com o jogador
+            if (bola_ativa && invencivel == 0 &&
+                bola_x + bola_raio >= pos_x &&
+                bola_x - bola_raio <= pos_x + largura_personagem &&
+                bola_y + bola_raio >= pos_y &&
+                bola_y - bola_raio <= pos_y + altura_personagem) {
+
+                vidaJogador--;
+                bola_ativa = false;
+                invencivel = frames_invencivel;
+
+                if (vidaJogador <= 0) {
+                    jogadorVivo = false;
+                    fim = true;
                 }
             }
 
@@ -433,12 +485,12 @@ void fase1(void) {
                     (frame_atual == 0) ? rudanEsquerda1 : rudanEsquerda2;
             }
 
-            // Desenha o personagem
-            if (sprite_atual) {
+            // Desenha o personagem (pisca enquanto está invencível)
+            if (sprite_atual && (invencivel == 0 || (invencivel / 5) % 2 == 0)) {
                 al_draw_bitmap(sprite_atual, pos_x, pos_y, 0);
             }
 
-            // Movimento e desenho do barco
+            // Movimento, tiro e desenho do barco
             if (barcoVivo) {
 
                 switch (barco_direcao) {
@@ -464,6 +516,34 @@ void fase1(void) {
                     break;
                 }
 
+                // Barco atira na direção do jogador
+                contador_tiro_barco++;
+
+                if (contador_tiro_barco >= intervalo_tiro_barco && !bola_ativa) {
+
+                    contador_tiro_barco = 0;
+                    bola_ativa = true;
+
+                    bola_x = barco1.x + barco_largura / 2.0f;
+                    bola_y = barco1.y + barco_altura / 2.0f;
+
+                    float alvo_x = pos_x + largura_personagem / 2.0f;
+                    float alvo_y = pos_y + altura_personagem / 2.0f;
+
+                    float dx = alvo_x - bola_x;
+                    float dy = alvo_y - bola_y;
+                    float dist = sqrtf(dx * dx + dy * dy);
+
+                    if (dist > 0.0f) {
+                        bola_dx = dx / dist * velocidade_bola;
+                        bola_dy = dy / dist * velocidade_bola;
+                    }
+                    else {
+                        bola_dx = 0.0f;
+                        bola_dy = velocidade_bola;
+                    }
+                }
+
                 al_draw_scaled_bitmap(
                     barco1.img,
                     0, 0,
@@ -475,7 +555,7 @@ void fase1(void) {
                 );
             }
 
-            // Desenha o tiro
+            // Desenha o tiro do jogador
             if (fogo_ativo) {
                 al_draw_filled_circle(
                     fogo_x,
@@ -485,6 +565,25 @@ void fase1(void) {
                 );
             }
 
+            // Desenha a bola preta do barco
+            if (bola_ativa) {
+                al_draw_filled_circle(
+                    bola_x,
+                    bola_y,
+                    bola_raio,
+                    al_map_rgb(0, 0, 0)
+                );
+
+                al_draw_circle(
+                    bola_x,
+                    bola_y,
+                    bola_raio,
+                    al_map_rgb(255, 255, 255),
+                    2
+                );
+            }
+
+            // HUD
             al_draw_textf(
                 fonte,
                 al_map_rgb(255, 255, 255),
@@ -492,6 +591,15 @@ void fase1(void) {
                 0,
                 "VIDA DO BARCO %d",
                 5 - vidaBarco
+            );
+
+            al_draw_textf(
+                fonte,
+                al_map_rgb(255, 255, 255),
+                100, 130,
+                0,
+                "SUAS VIDAS %d",
+                vidaJogador
             );
 
             // Atualiza a tela
@@ -518,5 +626,8 @@ void fase1(void) {
     al_destroy_event_queue(fila_eventos);
     al_destroy_display(display);
 
-    fase2();
+    // Só avança para a fase 2 se o jogador sobreviveu
+    if (jogadorVivo) {
+        fase2();
+    }
 }
