@@ -1,0 +1,31 @@
+﻿DIRECTIONAL HEROES - Rigged 4-Direction Cartoon Character Pack
+by Tiny Tileset  |  https://tinytileset.itch.io
+
+WHAT IS INSIDE
+6 heroes: Knight, Wizard, Ranger (left-handed bow), Viking, Skeleton Warrior, Goblin Scout.
+Each hero has WALK (8 frames), IDLE (8 frames) and ATTACK (16 frames) in all 4 directions (down, left, right, up). The only exception: the Ranger has no attack facing up or down (only left and right).
+
+/animations        every frame as a PNG + one horizontal sprite sheet per animation + animations.json
+                   /animations/<hero>/<direction>/<hero>_<direction>_<animation>_NN.png
+/rpg_maker_sheets  one 3x4 walk sheet per hero (columns: step, stand, step; rows: down, left, right, up) - the classic RPG Maker layout
+/rigged_parts      every hero split into separate parts for each direction (head, head_alt = shouting head, body,
+                   hand_1, hand_2, foot_l, foot_r, weapon, shield or quiver) + rigs.json with each part's position,
+                   size and draw order, so you can build your own animations
+
+HOW TO USE THE FRAMES
+- Frames are already cropped to the same size per hero, so they line up. "ground_point_in_frame" in animations.json is the spot under the feet.
+- walk = 10 fps loop, idle = 6 fps loop, attack = 14 fps one-shot.
+- Every hero has its OWN attack, in the 4 directions (down = toward the camera, up = away from it; the Ranger shoots only to the left and right): Knight = sword slash with a sweeping trail, Wizard = raises the staff, charges and fires a fireball that explodes (it flies toward the camera when facing down and away from it when facing up), Ranger = draws the bow and shoots an arrow, Viking = overhead axe chop with dust and a shockwave, Skeleton Warrior = the same sword slash as the knight, Goblin Scout = club bash with an impact burst.
+- The shouting head replaces the normal head during melee attacks. Arrows, fireballs, slash trails and dust are drawn into the attack frames (attack frames are wider than walk/idle frames: use the per-animation frame_size and ground_point_in_frame in animations.json).
+
+HOW TO USE THE RIG (rigs.json)
+- Each direction has its own set of parts. "center" is the part's centre relative to the ground point (0,0); negative y is up.
+- "draw_order_back_to_front" is the draw order. "weapon_grip_pivot" is the pixel inside the weapon image where the hand holds it: rotate the weapon around it.
+- Left and right views are drawn separately (not mirrored). In the side views only the weapon hand is shown.
+
+LICENSE
+Use in personal and commercial projects (games, apps, videos). Credit is appreciated but not required.
+You may NOT resell, redistribute or share the files themselves, alone or as part of another asset pack.
+
+
+

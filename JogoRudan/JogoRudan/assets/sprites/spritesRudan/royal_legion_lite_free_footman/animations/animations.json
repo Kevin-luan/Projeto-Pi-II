@@ -1,0 +1,38 @@
+{
+ "kng_footman": {
+  "directions": [
+   "down",
+   "left",
+   "right",
+   "up"
+  ],
+  "animations": {
+   "walk": {
+    "frames": 8,
+    "fps": 10,
+    "loop": true,
+    "frame_size": [
+     288,
+     312
+    ],
+    "ground_point_in_frame": [
+     144,
+     293
+    ]
+   },
+   "idle": {
+    "frames": 8,
+    "fps": 6,
+    "loop": true,
+    "frame_size": [
+     288,
+     312
+    ],
+    "ground_point_in_frame": [
+     144,
+     293
+    ]
+   }
+  }
+ }
+}
