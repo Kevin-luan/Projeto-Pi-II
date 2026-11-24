@@ -116,5 +116,5 @@ void menu(void) {
     al_destroy_event_queue(fila_eventos);
     al_destroy_timer(timer);
     al_destroy_display(display);
-    fase1();
+    fase1E();
 }
