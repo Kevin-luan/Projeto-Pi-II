@@ -33,6 +33,9 @@
     <ClCompile Include="menu.c">
       <Filter>Arquivos de Origem</Filter>
     </ClCompile>
+    <ClCompile Include="fase1E.c">
+      <Filter>Arquivos de Origem</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Image Include="assets\sprites\spritesRudan\rudanBaixo.png">

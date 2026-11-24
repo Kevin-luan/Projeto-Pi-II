@@ -251,9 +251,10 @@ void fase2(void)
 
 {
 
-    const int largura_t = 1040;
+    const int largura_t = 1920;
 
-    const int altura_t = 980;
+
+    const int altura_t = 1200;
 
     const int FPS = 60;
 
