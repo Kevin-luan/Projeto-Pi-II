@@ -6,7 +6,7 @@ int main(void)
     if (!al_init())
         return -1;
 
-    final();
+    menu();
 
     return 0;
 }
