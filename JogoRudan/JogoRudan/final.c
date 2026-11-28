@@ -164,11 +164,11 @@ void final(void)
     const float velocidade_tiro = 10.0f;
 
     // Configuracao das ondas (ajuste aqui a dificuldade)
-    const int soldados_primeira_onda = 2;     // a primeira onda tem 2 soldados
-    const int max_soldados_onda = 30;         // limite de soldados por onda
+    const int soldados_primeira_onda = 30;     // a primeira onda tem 2 soldados
+    const int max_soldados_onda = 100;         // limite de soldados por onda
     const int intervalo_onda = 60;            // pausa entre ondas (60 frames = 1 segundo)
     const float vel_inimigo_base = 0.6f;      // velocidade inicial (bem lenta)
-    const float vel_inimigo_por_onda = 0.03f; // quanto ficam mais rapidos a cada onda
+    const float vel_inimigo_por_onda = 0.06f; // quanto ficam mais rapidos a cada onda
     const float vel_inimigo_max = 1.8f;       // limite de velocidade dos soldados
 
     int pausa_onda = intervalo_onda;          // tempo ate a proxima onda comecar
@@ -176,13 +176,27 @@ void final(void)
     // Letreiro e musica da morte
     const char* texto_titulo = "FIM DE JOGO";                      // titulo do letreiro
     const char* texto_rodape = "APERTE ESC PARA SAIR";             // texto pequeno no fim
-    const char* arquivo_musica = "assets/musica/musica_morte.ogg"; // caminho da musica
-
+    const char* arquivo_musica = "assets/sprites/spritesRudan/musicaFinal.mp3"; // caminho da musica
     // ESCREVA SUA HISTORIA AQUI (quebra de linha automatica; use \n para pular linha)
     const char* texto_historia =
-        "Escreva aqui a sua historia. Ela sera mostrada dentro do letreiro, "
-        "com quebra de linha automatica.\n\n"
-        "Use barra n para separar os paragrafos.";
+        "Mas um dia, o horizonte mudou.\n"
+        "Grandes embarcacoes surgiram no mar. Homens desconhecidos chegaram trazendo armas, doencas e uma ambicao que jamais haviamos visto.\n"
+        "No começo, pensamos que eram apenas visitantes. Nao imaginavamos que sua chegada mudaria nossas vidas para sempre.\n\n"
+
+        "Eles nao vieram para conhecer nossa cultura. Vieram para tomar nossas terras.\n"
+        "Nossas aldeias foram invadidas, nossas casas queimadas e nossos irmaos assassinados.\n"
+        "Mulheres, criancas e idosos foram obrigados a fugir.\n"
+
+        "Lutamos para proteger nossas familias e nossa cultura,\n"
+        "mas muitos de nossos irmaos foram perdidos.\n"
+
+        "Mesmo diante de tanta dor, fiz uma promessa:\n"
+        "nossa historia nunca sera esquecida.\n"
+
+        "NOS JA ESTAVAMOS AQUI.\n"
+        "NOSSA HISTORIA CONTINUARA VIVA.";
+
+
 
     const float letreiro_larg = 1500.0f;
     const float letreiro_alt = 1000.0f;
@@ -284,11 +298,17 @@ void final(void)
 
     fonte = al_create_builtin_font();
 
-    // Audio (se algo falhar, o jogo continua normalmente sem musica)
-    if (al_install_audio() && al_init_acodec_addon()) {
+    // Inicialização do áudio
+    if (!al_install_audio()) {
+        printf("Erro ao inicializar o audio!\n");
+    }
 
-        al_reserve_samples(2);
+    if (!al_init_acodec_addon()) {
+        printf("Erro ao inicializar os codecs de audio!\n");
+    }
 
+    if (!al_reserve_samples(2)) {
+        printf("Erro ao reservar samples de audio!\n");
     }
 
     // Sprites do personagem
@@ -404,6 +424,13 @@ void final(void)
 
     // Musica da morte (carregada agora para nao travar na hora de tocar)
     musica = al_load_sample(arquivo_musica);
+
+    if (!musica) {
+        printf("Erro ao carregar a musica: %s\n", arquivo_musica);
+    }
+    else {
+        printf("Musica carregada com sucesso!\n");
+    }
 
     // Comeca sem inimigos: a primeira onda e criada pelo loop abaixo
     onda_atual = 0;
