@@ -35,7 +35,7 @@ void fase1E(void) {
 
     // NOVO - Fala do NPC
     const char* texto_npc =
-        "Guerreiro, rápido! Nossas praias estão sob ataque! "
+        "Guerreiro, rápido! Nossas praias estão sobre ataque! "
         "Homens de pele clara vindos de além-mar desembarcaram na costa. "
         "O líder da vanguarda, Nicolau Coelho, foi o primeiro a cravar os pés "
         "em Pindorama — nossa amada terra das palmeiras. "

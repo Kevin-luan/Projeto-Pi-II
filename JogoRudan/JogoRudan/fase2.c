@@ -284,6 +284,8 @@ void fase2(void)
 
     bool fogo_ativo = false;
 
+    ALLEGRO_BITMAP* fundo = NULL;   // fundo
+
     ALLEGRO_DISPLAY* display = NULL;
 
     ALLEGRO_TIMER* timer = NULL;
@@ -437,6 +439,9 @@ void fase2(void)
         return;
 
     }
+
+    // fundo
+    fundo = al_load_bitmap("assets/sprites/spritesRudan/planodeFundofase2.jpg");
 
     // Registra os eventos
 
@@ -731,19 +736,30 @@ void fase2(void)
 
             // Quando todos morrem, vem a proxima onda (1, 2, 3, ...)
 
-            if (todosInimigosMortos()) {
+            if (todosInimigosMortos() && onda_atual < 10) {
 
                 onda_atual++;
 
                 gerarOnda(onda_atual, largura_t, altura_t,
                     pos_x + largura_personagem / 2.0f,
                     pos_y + altura_personagem / 2.0f);
+                if (onda_atual >= 10) {
+                    fim = true;
+                }
 
             }
 
 
 
             al_clear_to_color(al_map_rgb(20, 50, 70));
+
+            // fundo
+            if (fundo) {
+                al_draw_scaled_bitmap(fundo,
+                    0, 0,
+                    al_get_bitmap_width(fundo), al_get_bitmap_height(fundo),
+                    0, 0, largura_t, altura_t, 0);
+            }
 
             ALLEGRO_BITMAP* sprite_atual = NULL;
 
@@ -819,10 +835,17 @@ void fase2(void)
 
     liberarInimigo();
 
+    // fundo
+    if (fundo) al_destroy_bitmap(fundo);
+
     al_destroy_event_queue(fila_eventos);
 
     al_destroy_timer(timer);
 
+
     al_destroy_display(display);
+
+    final();
+
 
 }

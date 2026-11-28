@@ -156,6 +156,8 @@
     <ClCompile Include="fase1.c" />
     <ClCompile Include="fase1E.c" />
     <ClCompile Include="fase2.c" />
+    <ClCompile Include="fase2E.c" />
+    <ClCompile Include="final.c" />
     <ClCompile Include="main.c" />
     <ClCompile Include="menu.c" />
   </ItemGroup>
