@@ -68,7 +68,7 @@ void fase1(void) {
     const float bola_raio = 8.0f;
     const float velocidade_bola = 6.0f;
     int contador_tiro_barco = 0;
-    const int intervalo_tiro_barco = 120;  // atira a cada 2 s
+    const int intervalo_tiro_barco = 20;  // atira a cada 2 s
 
     // Teclas
     bool teclas[] = { false, false, false, false, false };
@@ -628,6 +628,6 @@ void fase1(void) {
 
     // Só avança para a fase 2 se o jogador sobreviveu
     if (jogadorVivo) {
-        fase2();
+        fase2E();
     }
 }
